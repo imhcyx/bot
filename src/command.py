@@ -229,7 +229,7 @@ class CommandManager:
                 return teach.answer
             elif len(msg) < 50: # nine calculation
                 r = re.compile(r'[0-9]+')
-                max = 0
+                max = -1
                 for x in r.findall(msg):
                     i = int(x)
                     if i > max:
