@@ -228,9 +228,8 @@ class CommandManager:
                 teach = random.choice(teaches)
                 return teach.answer
             elif len(msg) < 50: # nine calculation
-                r = re.compile(r'[0-9]+')
                 max = -1
-                for x in r.findall(msg):
+                for x in re.findall(r'[0-9]+', msg, re.M):
                     i = int(x)
                     if i > max:
                         max = i
