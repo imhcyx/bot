@@ -29,3 +29,10 @@ class Teach(Base):
     uid = Column(Integer, ForeignKey('users.id'))
     question = Column(String(50))
     answer = Column(String(50))
+
+class Nine(Base):
+    __tablename__ = 'nine'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    number = Column(Integer)
+    answer = Column(String(50))

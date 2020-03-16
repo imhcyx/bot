@@ -1,5 +1,6 @@
-from model import User, Group, Teach
+from model import User, Group, Teach, Nine
 import random
+import re
 
 class BaseCommand:
     def __init__(self):
@@ -226,3 +227,13 @@ class CommandManager:
             if len(teaches) > 0:
                 teach = random.choice(teaches)
                 return teach.answer
+            elif len(msg) < 50: # nine calculation
+                r = re.compile(r'[0-9]+')
+                max = 0
+                for x in r.findall(msg):
+                    i = int(x)
+                    if i > max:
+                        max = i
+                nine = self._dbsess.query(Nine).filter_by(number=max)
+                if nine.count() > 0:
+                    return nine.one().answer
