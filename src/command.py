@@ -223,5 +223,6 @@ class CommandManager:
                 return "未知命令%s" % arg[0]
         else:
             teaches = self._dbsess.query(Teach).filter_by(question=msg).all()
-            teach = random.choice(teaches)
-            return teach.answer
+            if len(teaches) > 0:
+                teach = random.choice(teaches)
+                return teach.answer
