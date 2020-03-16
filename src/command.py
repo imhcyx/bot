@@ -8,7 +8,7 @@ class BaseCommand:
         self.help = ''
         self.level = 0
 
-    def handler(self, cm, arg, uid):
+    def handler(self, cm, arg, user):
         return ''
 
 class AdminCommand(BaseCommand):
@@ -18,20 +18,35 @@ class AdminCommand(BaseCommand):
         self.help = "只有True Administrator才能执行的命令（"
         self.level = 5
     
-    def handler(self, cm, arg, uid):
-        if uid == 907308901:
+    def handler(self, cm, arg, user):
+        if user.id == 907308901:
             return 'not implemented'
         else:
             return "权限不足"
+
+class CallmeCommand(BaseCommand):
+    def __init__(self, dbsess):
+        self.format = '<nickname>'
+        self.desc = '设置称谓'
+        self.help = '设置琪露诺对我的称谓为<nickname>。'
+        self.level = 0
+        self._dbsess = dbsess
+
+    def handler(self, cm, arg, user):
+        if len(arg) != 2:
+            return "参数个数不正确"
+        user.name = arg[1]
+        self._dbsess.commit()
+        return "好的，%s！本姑娘以后就这么称呼你啦~" % user.title()
 
 class HelpCommand(BaseCommand):
     def __init__(self):
         self.format = '[<cmd>]'
         self.desc = '查看帮助'
-        self.help = "查看命令列表或指定命令的帮助"
+        self.help = "查看命令列表或指定命令的帮助。"
         self.level = 0
 
-    def handler(self, cm, arg, uid):
+    def handler(self, cm, arg, user):
         if len(arg) == 1:
             s = "命令列表：\n"
             for (k, v) in cm.command_iter():
@@ -44,11 +59,21 @@ class HelpCommand(BaseCommand):
                 s = '.cirno.' + s
             cmd = cm.command(s)
             if cmd:
-                return "%s %s\nClearance level: %d\n%s" % (s, cmd.format, cmd.level, cmd.help)
+                return "%s %s\n权限要求：%d\n%s" % (s, cmd.format, cmd.level, cmd.help)
             else:
                 return "未知命令%s" % s
         else:
             return "参数个数不正确"
+
+class MeCommand(BaseCommand):
+    def __init__(self):
+        self.format = ''
+        self.desc = '我的信息'
+        self.help = '查看我的信息'
+        self.level = 0
+
+    def handler(self, cm, arg, user):
+        return "你好，%s！\n你的权限等级为%d。" % (user.title(), user.level)
 
 class TeachCommand(BaseCommand):
     def __init__(self, dbsess):
@@ -58,10 +83,10 @@ class TeachCommand(BaseCommand):
         self.level = 1
         self._dbsess = dbsess
 
-    def handler(self, cm, arg, uid):
+    def handler(self, cm, arg, user):
         if len(arg) != 3:
             return "参数个数不正确"
-        teach = Teach(uid=uid, question=arg[1], answer=arg[2])
+        teach = Teach(uid=user.id, question=arg[1], answer=arg[2])
         self._dbsess.add(teach)
         self._dbsess.commit()
         return "琪露诺成功记住了问题的答案！问答编号为%d。" % teach.id
@@ -74,7 +99,7 @@ class TeachDeleteCommand(BaseCommand):
         self.level = 4
         self._dbsess = dbsess
 
-    def handler(self, cm, arg, uid):
+    def handler(self, cm, arg, user):
         if len(arg) != 2:
             return "参数个数不正确"
         try:
@@ -94,7 +119,7 @@ class TeachQueryCommand(BaseCommand):
         self.level = 4
         self._dbsess = dbsess
 
-    def handler(self, cm, arg, uid):
+    def handler(self, cm, arg, user):
         if len(arg) != 2:
             return "参数个数不正确"
         try:
@@ -113,7 +138,7 @@ class TeachSearchCommand(BaseCommand):
         self.level = 4
         self._dbsess = dbsess
 
-    def handler(self, cm, arg, uid):
+    def handler(self, cm, arg, user):
         if len(arg) != 2:
             return "参数个数不正确"
         try:
@@ -155,7 +180,9 @@ class CommandManager:
     def __init__(self, dbsess):
         self._commands = {
             '.cirno.admin': AdminCommand(),
+            '.cirno.callme': CallmeCommand(dbsess),
             '.cirno.help': HelpCommand(),
+            '.cirno.me': MeCommand(),
             '.cirno.teach': TeachCommand(dbsess),
             '.cirno.teach.delete': TeachDeleteCommand(dbsess),
             '.cirno.teach.query': TeachQueryCommand(dbsess),
@@ -180,7 +207,18 @@ class CommandManager:
                 return "我是天才少女琪露诺！输入.cirno.help查看帮助信息"
             cmd = self._commands.get(arg[0])
             if cmd:
-                return cmd.handler(self, arg, uid)
+                query = self._dbsess.query(User).filter_by(id=uid)
+                user = None
+                if query.count() == 0:
+                    user = User(id=uid, level=1)
+                    self._dbsess.add(user)
+                    self._dbsess.commit()
+                else:
+                    user = query.one()
+                if user.level >= cmd.level:
+                    return cmd.handler(self, arg, user)
+                else:
+                    return "你没有使用该命令的权限。"
             else:
                 return "未知命令%s" % arg[0]
         else:
