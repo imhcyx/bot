@@ -16,6 +16,7 @@ async def recv_worker(ws, q):
 async def send_worker(ws, q):
     while True:
         api = await q.get()
+        await asyncio.sleep(1)
         await ws.send(json.dumps(api))
         q.task_done()
 
