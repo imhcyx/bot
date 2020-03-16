@@ -7,8 +7,8 @@ class MsgHandler:
     def handle_message(self, hm, event):
         uid = event.get('user_id')
         msg = event.get('message')
-        if msg.startswith('.cirno'):
-            resp = hm.cmdmanager().handle_command(msg, uid)
+        resp = hm.cmdmanager().handle_message(msg, uid)
+        if resp:
             return self._send_response(event, resp)
 
 class PrivateMsgHandler(MsgHandler):
@@ -32,13 +32,13 @@ class GroupMsgHandler(MsgHandler):
         }
 
 class HandlerManager:
-    def __init__(self):
+    def __init__(self, dbsess):
         self._msghandlers = {
             'private': PrivateMsgHandler(),
             'group': GroupMsgHandler()
         }
         self._fallbackmsghandler = MsgHandler()
-        self._cm = CommandManager()
+        self._cm = CommandManager(dbsess)
     
     def cmdmanager(self):
         return self._cm

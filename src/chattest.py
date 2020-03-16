@@ -1,6 +1,8 @@
 from command import CommandManager
+from db import Session
 
-cm = CommandManager()
+session = Session()
+cm = CommandManager(session)
 uid = 0
 
 while True:
@@ -8,5 +10,5 @@ while True:
     if msg.startswith('#uid '):
         uid = int(msg.split(' ')[1])
     else:
-        resp = cm.handle_command(msg, uid)
+        resp = cm.handle_message(msg, uid)
         print(resp)

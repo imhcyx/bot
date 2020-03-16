@@ -2,9 +2,12 @@ import asyncio
 import websockets
 import json
 
+from db import Session
+session = Session()
+
 from handler import HandlerManager
 
-hm = HandlerManager()
+hm = HandlerManager(session)
 
 async def recv_worker(ws, q):
     while True:
