@@ -21,9 +21,9 @@ class AdminCommand(BaseCommand):
 
 class HelpCommand(BaseCommand):
     def __init__(self):
-        self.format = '...'
-        self.desc = '管理员命令'
-        self.help = "只有True Administrator才能执行的命令（"
+        self.format = '[<cmd>]'
+        self.desc = '查看帮助'
+        self.help = "查看命令列表或指定命令的帮助"
 
     def handler(self, cm, arg, uid):
         if len(arg) == 1:
