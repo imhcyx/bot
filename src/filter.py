@@ -1,11 +1,25 @@
-from command import CommandManager
-from model import User, Group, Teach, Nine
 import random
 import re
+
+from command import CommandManager, AdminManager
+from model import User, Group, Teach, Nine
+from config import cfg
+from status import status
 
 class BaseFilter:
     def filter(self, msg, user, group):
         pass
+
+class AdminFilter(BaseFilter):
+    def __init__(self, dbsess):
+        self._dbsess = dbsess
+        self._am = AdminManager(dbsess)
+    
+    def filter(self, msg, user, group):
+        if msg.startswith('.cirnoadmin') and user.id == cfg['admin_id']:
+            return self._am.handle(msg, user, group)
+        elif status['block']:
+            return False # block all subsequent filters
 
 class CommandFilter(BaseFilter):
     def __init__(self, dbsess):
@@ -45,6 +59,7 @@ class FilterManager:
     def __init__(self, dbsess):
         self._dbsess = dbsess
         self._filters = [
+            AdminFilter(dbsess),
             CommandFilter(dbsess),
             QAFilter(dbsess),
             NineFilter(dbsess),
@@ -77,3 +92,5 @@ class FilterManager:
             result = filter.filter(msg, user, group)
             if result:
                 return result
+            elif result == False:
+                return None

@@ -2,10 +2,13 @@ import json
 import os
 
 if os.path.exists('config.json'):
-    cfgfile = open('config.json', 'r')
+    cfgfile = 'config.json'
 else:
-    cfgfile = open('defconfig.json', 'r')
+    cfgfile = 'defconfig.json'
 
-cfg = json.load(cfgfile)
+with open(cfgfile, 'r') as f:
+    cfg = json.load(f)
 
-cfgfile.close()
+assert 'ws' in cfg
+assert 'db' in cfg
+assert 'admin_id' in cfg

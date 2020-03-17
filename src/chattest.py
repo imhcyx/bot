@@ -10,7 +10,7 @@ while True:
     msg = input('%d @ %d> ' % (uid, gid))
     if msg.startswith('#uid '):
         uid = int(msg.split(' ')[1])
-    if msg.startswith('#gid '):
+    elif msg.startswith('#gid '):
         gid = int(msg.split(' ')[1])
     else:
         resp = fm.handle(msg, uid, gid)

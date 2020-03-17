@@ -1,4 +1,6 @@
 from model import User, Group, Teach, Nine
+from status import status
+from util import parse_command
 
 class BaseCommand:
     def __init__(self):
@@ -7,21 +9,8 @@ class BaseCommand:
         self.help = ''
         self.level = 0
 
-    def handler(self, cm, arg, user):
+    def handle(self, arg, user, group):
         return ''
-
-class AdminCommand(BaseCommand):
-    def __init__(self):
-        self.format = '...'
-        self.desc = '管理员命令'
-        self.help = "只有True Administrator才能执行的命令（"
-        self.level = 5
-    
-    def handler(self, cm, arg, user):
-        if user.id == 907308901:
-            return 'not implemented'
-        else:
-            return "权限不足"
 
 class CallmeCommand(BaseCommand):
     def __init__(self, dbsess):
@@ -31,7 +20,7 @@ class CallmeCommand(BaseCommand):
         self.level = 0
         self._dbsess = dbsess
 
-    def handler(self, cm, arg, user):
+    def handle(self, arg, user, group):
         if len(arg) != 2:
             return "参数个数不正确"
         user.name = arg[1]
@@ -39,16 +28,17 @@ class CallmeCommand(BaseCommand):
         return "好的，%s！本姑娘以后就这么称呼你啦~" % user.title()
 
 class HelpCommand(BaseCommand):
-    def __init__(self):
+    def __init__(self, cm):
         self.format = '[<cmd>]'
         self.desc = '查看帮助'
         self.help = "查看命令列表或指定命令的帮助。"
         self.level = 0
+        self._cm = cm
 
-    def handler(self, cm, arg, user):
+    def handle(self, arg, user, group):
         if len(arg) == 1:
             s = "命令列表：\n"
-            for (k, v) in cm.command_iter():
+            for (k, v) in self._cm.command_iter():
                 s += "%s %s\n" % (k, v.desc)
             s += "\n使用.cirno.help <cmd>查看命令具体帮助，<cmd>可省略\".cirno.\"。"
             return s
@@ -56,7 +46,7 @@ class HelpCommand(BaseCommand):
             s = arg[1]
             if not s.startswith('.cirno'):
                 s = '.cirno.' + s
-            cmd = cm.command(s)
+            cmd = self._cm.command(s)
             if cmd:
                 return "%s %s\n权限要求：%d\n%s" % (s, cmd.format, cmd.level, cmd.help)
             else:
@@ -71,7 +61,7 @@ class MeCommand(BaseCommand):
         self.help = '查看我的信息'
         self.level = 0
 
-    def handler(self, cm, arg, user):
+    def handle(self, arg, user, group):
         return "你好，%s！\n你的权限等级为%d。" % (user.title(), user.level)
 
 class TeachCommand(BaseCommand):
@@ -82,7 +72,7 @@ class TeachCommand(BaseCommand):
         self.level = 1
         self._dbsess = dbsess
 
-    def handler(self, cm, arg, user):
+    def handle(self, arg, user, group):
         if len(arg) != 3:
             return "参数个数不正确"
         teach = Teach(uid=user.id, question=arg[1], answer=arg[2])
@@ -98,7 +88,7 @@ class TeachDeleteCommand(BaseCommand):
         self.level = 4
         self._dbsess = dbsess
 
-    def handler(self, cm, arg, user):
+    def handle(self, arg, user, group):
         if len(arg) != 2:
             return "参数个数不正确"
         try:
@@ -118,7 +108,7 @@ class TeachQueryCommand(BaseCommand):
         self.level = 4
         self._dbsess = dbsess
 
-    def handler(self, cm, arg, user):
+    def handle(self, arg, user, group):
         if len(arg) != 2:
             return "参数个数不正确"
         try:
@@ -137,7 +127,7 @@ class TeachSearchCommand(BaseCommand):
         self.level = 4
         self._dbsess = dbsess
 
-    def handler(self, cm, arg, user):
+    def handle(self, arg, user, group):
         if len(arg) != 2:
             return "参数个数不正确"
         try:
@@ -157,30 +147,11 @@ class TeachSearchCommand(BaseCommand):
         except:
             return "查询失败"
 
-def parse_command(msg):
-    arg = []
-    word = ''
-    quote = False
-    for i in range(len(msg)):
-        c = msg[i]
-        if c == '"':
-            quote = not quote
-        elif c == ' ' and not quote:
-            if word != '':
-                arg.append(word)
-                word = ''
-        else:
-            word += c
-    if word != '':
-        arg.append(word)
-    return arg
-
 class CommandManager:
     def __init__(self, dbsess):
         self._commands = {
-            '.cirno.admin': AdminCommand(),
             '.cirno.callme': CallmeCommand(dbsess),
-            '.cirno.help': HelpCommand(),
+            '.cirno.help': HelpCommand(self),
             '.cirno.me': MeCommand(),
             '.cirno.teach': TeachCommand(dbsess),
             '.cirno.teach.delete': TeachDeleteCommand(dbsess),
@@ -200,15 +171,54 @@ class CommandManager:
             yield(k, v)
 
     def handle(self, msg, user, group):
-        if msg.startswith('.cirno'):
-            arg = parse_command(msg)
-            if arg[0] == '.cirno':
-                return "我是天才少女琪露诺！输入.cirno.help查看帮助信息"
-            cmd = self._commands.get(arg[0])
-            if cmd:
-                if user.level >= cmd.level:
-                    return cmd.handler(self, arg, user)
-                else:
-                    return "你没有使用该命令的权限。"
+        arg = parse_command(msg)
+        if arg[0] == '.cirno':
+            return "我是天才少女琪露诺！输入.cirno.help查看帮助信息"
+        cmd = self._commands.get(arg[0])
+        if cmd:
+            if user.level >= cmd.level:
+                return cmd.handle(arg, user, group)
             else:
-                return "未知命令%s" % arg[0]
+                return "你没有使用该命令的权限。"
+        else:
+            return "未知命令%s" % arg[0]
+
+class BaseAdminCommand:
+    def handle(self, arg, user, group):
+        pass
+
+class BlockAdminCommand(BaseAdminCommand):
+    def handle(self, arg, user, group):
+        if len(arg) == 1:
+            return 'blocked' if status['block'] else 'unblocked'
+        elif len(arg) == 2:
+            if arg[1] == '0':
+                status['block'] = False
+                return 'OK'
+            elif arg[1] == '1':
+                status['block'] = True
+                return 'OK'
+
+class StatusAdminCommand(BaseAdminCommand):
+    def handle(self, arg, user, group):
+        s = 'STATUS'
+        for (k, v) in status.items():
+            s += "\n%s: %s" %(k, repr(v))
+        return s
+
+class AdminManager:
+    def __init__(self, dbsess):
+        self._commands = {
+            '.cirnoadmin.block': BlockAdminCommand(),
+            '.cirnoadmin.status': StatusAdminCommand(),
+        }
+        self._dbsess = dbsess
+    
+    def handle(self, msg, user, group):
+        arg = msg.split(' ')
+        if arg[0] == '.cirnoadmin':
+            return 'Access confirmed'
+        cmd = self._commands.get(arg[0])
+        if cmd:
+            return cmd.handle(arg, user, group)
+            
