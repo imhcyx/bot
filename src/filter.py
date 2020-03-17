@@ -11,9 +11,9 @@ class BaseFilter:
         pass
 
 class AdminFilter(BaseFilter):
-    def __init__(self, dbsess):
-        self._dbsess = dbsess
-        self._am = AdminManager(dbsess)
+    def __init__(self, hh):
+        self._hh = hh
+        self._am = AdminManager(hh)
     
     def filter(self, msg, user, group):
         if msg.startswith('.cirnoadmin') and user.id == cfg['admin_id']:
@@ -22,27 +22,27 @@ class AdminFilter(BaseFilter):
             return False # block all subsequent filters
 
 class CommandFilter(BaseFilter):
-    def __init__(self, dbsess):
-        self._dbsess = dbsess
-        self._cm = CommandManager(dbsess)
+    def __init__(self, hh):
+        self._hh = hh
+        self._cm = CommandManager(hh)
     
     def filter(self, msg, user, group):
         if msg.startswith('.cirno'): 
             return self._cm.handle(msg, user, group)
 
 class QAFilter(BaseFilter):
-    def __init__(self, dbsess):
-        self._dbsess = dbsess
+    def __init__(self, hh):
+        self._hh = hh
     
     def filter(self, msg, user, group):
-        teaches = self._dbsess.query(Teach).filter_by(question=msg).all()
+        teaches = self._hh.dbsess().query(Teach).filter_by(question=msg).all()
         if len(teaches) > 0:
             teach = random.choice(teaches)
             return teach.answer
 
 class NineFilter(BaseFilter):
-    def __init__(self, dbsess):
-        self._dbsess = dbsess
+    def __init__(self, hh):
+        self._hh = hh
     
     def filter(self, msg, user, group):
         if len(msg) < 50:
@@ -52,36 +52,38 @@ class NineFilter(BaseFilter):
                 if i > max:
                     max = i
             if max > 9 or random.random() < 0.6: # trigger with probability for 0-9
-                nine = self._dbsess.query(Nine).filter_by(number=max)
+                nine = self._hh.dbsess().query(Nine).filter_by(number=max)
                 if nine.count() > 0:
                     return nine.one().answer
 
 class FilterManager:
-    def __init__(self, dbsess):
-        self._dbsess = dbsess
+    def __init__(self, hh):
+        self._hh = hh
         self._filters = [
-            AdminFilter(dbsess),
-            CommandFilter(dbsess),
-            QAFilter(dbsess),
-            NineFilter(dbsess),
+            AdminFilter(hh),
+            CommandFilter(hh),
+            QAFilter(hh),
+            NineFilter(hh),
         ]
     
     def _get_user_by_id(self, id):
-        query = self._dbsess.query(User).filter_by(id=id)
+        sess = self._hh.dbsess()
+        query = sess.query(User).filter_by(id=id)
         if query.count() == 0:
             user = User(id=id, level=1)
-            self._dbsess.add(user)
-            self._dbsess.commit()
+            sess.add(user)
+            sess.commit()
         else:
             user = query.one()
         return user
     
     def _get_group_by_id(self, id):
-        query = self._dbsess.query(Group).filter_by(id=id)
+        sess = self._hh.dbsess()
+        query = sess.query(Group).filter_by(id=id)
         if query.count() == 0:
             group = Group(id=id)
-            self._dbsess.add(group)
-            self._dbsess.commit()
+            sess.add(group)
+            sess.commit()
         else:
             group = query.one()
         return group

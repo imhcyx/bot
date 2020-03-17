@@ -1,8 +1,13 @@
-from filter import FilterManager
+from handler import HandlerHelper
 from db import Session
 
 session = Session()
-fm = FilterManager(session)
+hh = HandlerHelper(
+    session,
+    lambda x: print('task added'),
+    lambda x: print('response sent')
+)
+fm = hh.fm()
 uid = 123456
 gid = 0
 

@@ -3,34 +3,38 @@ import websockets
 import json
 
 from config import cfg
-
 from db import Session
-session = Session()
+from handler import HandlerHelper
 
-from handler import HandlerManager
-
-hm = HandlerManager(session)
-
-async def recv_worker(ws, q):
+async def recv_worker(ws, handler):
     while True:
-        api = hm.handle_event(json.loads(await ws.recv()))
-        if api:
-            await q.put(api)
-            await q.join()
+        handler.handle_event(json.loads(await ws.recv()))
 
-async def send_worker(ws, q):
+async def task_worker(ws, task_q):
     while True:
-        api = await q.get()
+        task = await task_q.get()
+
+async def send_worker(ws, send_q):
+    while True:
+        api = await send_q.get()
         await asyncio.sleep(1)
         await ws.send(json.dumps(api))
-        q.task_done()
 
 async def main():
+    session = Session()
     async with websockets.connect(cfg['ws'], ping_interval=None) as ws:
-        q = asyncio.Queue()
-        recv_task = asyncio.create_task(recv_worker(ws, q))
-        send_task = asyncio.create_task(send_worker(ws, q))
-        await recv_task
-        await send_task
+        send_q = asyncio.Queue()
+        task_q = asyncio.Queue()
+        handler = HandlerHelper(
+            session,
+            lambda task: send_q.put_nowait(task), 
+            lambda task: task_q.put_nowait(task)
+        )
+        recv_t = asyncio.create_task(recv_worker(ws, handler))
+        task_t = asyncio.create_task(send_worker(ws, task_q))
+        send_t = asyncio.create_task(send_worker(ws, send_q))
+        await recv_t
+        await task_t
+        await send_t
 
 asyncio.run(main())
