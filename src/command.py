@@ -1,6 +1,4 @@
 from model import User, Group, Teach, Nine
-import random
-import re
 
 class BaseCommand:
     def __init__(self):
@@ -201,38 +199,16 @@ class CommandManager:
         for (k, v) in self._commands.items():
             yield(k, v)
 
-    def handle_message(self, msg, uid):
+    def handle(self, msg, user, group):
         if msg.startswith('.cirno'):
             arg = parse_command(msg)
             if arg[0] == '.cirno':
                 return "我是天才少女琪露诺！输入.cirno.help查看帮助信息"
             cmd = self._commands.get(arg[0])
             if cmd:
-                query = self._dbsess.query(User).filter_by(id=uid)
-                user = None
-                if query.count() == 0:
-                    user = User(id=uid, level=1)
-                    self._dbsess.add(user)
-                    self._dbsess.commit()
-                else:
-                    user = query.one()
                 if user.level >= cmd.level:
                     return cmd.handler(self, arg, user)
                 else:
                     return "你没有使用该命令的权限。"
             else:
                 return "未知命令%s" % arg[0]
-        else:
-            teaches = self._dbsess.query(Teach).filter_by(question=msg).all()
-            if len(teaches) > 0:
-                teach = random.choice(teaches)
-                return teach.answer
-            elif len(msg) < 50 and random.random() < 0.8: # nine calculation
-                max = -1
-                for x in re.findall(r'[0-9]+', msg, re.M):
-                    i = int(x)
-                    if i > max:
-                        max = i
-                nine = self._dbsess.query(Nine).filter_by(number=max)
-                if nine.count() > 0:
-                    return nine.one().answer

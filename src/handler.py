@@ -1,13 +1,14 @@
-from command import CommandManager
+from filter import FilterManager
 
 class MsgHandler:
     def _send_response(self, event, resp):
         pass
 
     def handle_message(self, hm, event):
-        uid = event.get('user_id')
         msg = event.get('message')
-        resp = hm.cmdmanager().handle_message(msg, uid)
+        uid = event.get('user_id')
+        gid = event.get('group_id')
+        resp = hm.filtman().handle(msg, uid, gid)
         if resp:
             return self._send_response(event, resp)
 
@@ -35,16 +36,15 @@ class HandlerManager:
     def __init__(self, dbsess):
         self._msghandlers = {
             'private': PrivateMsgHandler(),
-            'group': GroupMsgHandler()
+            'group': GroupMsgHandler(),
         }
-        self._fallbackmsghandler = MsgHandler()
-        self._cm = CommandManager(dbsess)
+        self._fm = FilterManager(dbsess)
     
-    def cmdmanager(self):
-        return self._cm
+    def filtman(self):
+        return self._fm
 
     def handle_event(self, event):
         if event.get('post_type') == 'message':
-            h = self._msghandlers.get(event.get('message_type'),
-                self._fallbackmsghandler)
-            return h.handle_message(self, event)
+            h = self._msghandlers.get(event.get('message_type'))
+            if h:
+                return h.handle_message(self, event)
