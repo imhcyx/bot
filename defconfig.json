@@ -1,0 +1,5 @@
+{
+    "ws": "ws://localhost:6700",
+    "db": "sqlite:////persistent/bot.db",
+    "admin_id": 907308901
+}

@@ -2,6 +2,8 @@ import asyncio
 import websockets
 import json
 
+from config import cfg
+
 from db import Session
 session = Session()
 
@@ -24,8 +26,7 @@ async def send_worker(ws, q):
         q.task_done()
 
 async def main():
-    async with websockets.connect('ws://localhost:6700', ping_interval=None) as ws:
-        print('connection established')
+    async with websockets.connect(cfg['ws'], ping_interval=None) as ws:
         q = asyncio.Queue()
         recv_task = asyncio.create_task(recv_worker(ws, q))
         send_task = asyncio.create_task(send_worker(ws, q))

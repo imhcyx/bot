@@ -2,27 +2,34 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from model import Base, User, Nine
 
-engine = create_engine('sqlite:///bot.db')
+from config import cfg
+
+engine = create_engine(cfg['db'])
 
 Session = sessionmaker(bind=engine)
 
 if __name__ == "__main__":
     Base.metadata.create_all(engine)
     session = Session()
-    if session.query(User).filter_by(id=907308901).count() == 0:
-        admin = User(id=907308901, level=5)
+    uid = cfg['admin_id']
+    if session.query(User).filter_by(id=uid).count() == 0:
+        # adminstrator
+        print('add administrator ...')
+        admin = User(id=uid, level=5)
         session.add(admin)
         session.commit()
-    with open('9.txt', 'r') as f:
-        try:
-            while True:
-                s = f.readline().strip()
-                if s:
-                    num = int(s.split('=')[0])
-                    if session.query(Nine).filter_by(number=num).count() == 0:
+        # nine-calc data import
+        print('import nine-calc data ...')
+        with open('9.txt', 'r') as f:
+            try:
+                while True:
+                    s = f.readline().strip()
+                    if s:
+                        num = int(s.split('=')[0])
                         nine = Nine(number=num, answer=s)
                         session.add(nine)
-                else:
-                    break
-        finally:
-            session.commit()
+                    else:
+                        break
+            finally:
+                session.commit()
+    session.close()
