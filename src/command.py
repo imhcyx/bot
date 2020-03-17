@@ -1,6 +1,7 @@
 from model import User, Group, Teach, Nine
 from status import status
 from util import parse_command
+from util import SystemTask
 
 class BaseCommand:
     def handle(self, arg, user, group):
@@ -192,6 +193,8 @@ class BlockAdminCommand(BaseAdminCommand):
             elif arg[1] == '1':
                 status['block'] = True
                 return 'OK'
+        else:
+            return 'Invalid argument format'
 
 class StatusAdminCommand(BaseAdminCommand):
     def handle(self, arg, user, group):
@@ -200,11 +203,32 @@ class StatusAdminCommand(BaseAdminCommand):
             s += "\n%s: %s" %(k, repr(v))
         return s
 
+class SystemAdminCommand(BaseAdminCommand):
+    def __init__(self, hh):
+        self._hh = hh
+    
+    def handle(self, arg, user, group):
+        if len(arg) > 1:
+            uid = user.id
+            gid = group.id if group else None
+            cmd = ' '.join(arg[1:])
+            task = SystemTask(
+                uid=uid,
+                gid=gid,
+                callback=lambda s: self._hh.send_msg(uid, gid, "Result:\n%s" % s),
+                cmd=cmd
+            )
+            self._hh.new_task(task)
+            return 'Command: %s' % cmd
+        else:
+            return 'Invalid argument format'
+
 class AdminManager:
     def __init__(self, hh):
         self._commands = {
             '.cirnoadmin.block': BlockAdminCommand(),
             '.cirnoadmin.status': StatusAdminCommand(),
+            '.cirnoadmin.system': SystemAdminCommand(hh),
         }
         self._hh = hh
     

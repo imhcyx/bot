@@ -34,6 +34,12 @@ class HandlerHelper:
             else:
                 self.send_private_msg(uid, resp)
 
+    def send_msg(self, uid, gid, resp):
+        if gid:
+            self.send_group_msg(gid, resp)
+        else:
+            self.send_private_msg(uid, resp)
+
     def send_private_msg(self, uid, resp):
         self.send({
             'action': 'send_private_msg',
