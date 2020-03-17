@@ -45,15 +45,16 @@ class NineFilter(BaseFilter):
         self._dbsess = dbsess
     
     def filter(self, msg, user, group):
-        if len(msg) < 50 and random.random() < 0.6:
+        if len(msg) < 50:
             max = -1
             for x in re.findall(r'[0-9]+', msg, re.M):
                 i = int(x)
                 if i > max:
                     max = i
-            nine = self._dbsess.query(Nine).filter_by(number=max)
-            if nine.count() > 0:
-                return nine.one().answer
+            if max > 9 or random.random() < 0.6: # trigger with probability for 0-9
+                nine = self._dbsess.query(Nine).filter_by(number=max)
+                if nine.count() > 0:
+                    return nine.one().answer
 
 class FilterManager:
     def __init__(self, dbsess):
