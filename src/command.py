@@ -227,7 +227,7 @@ class CommandManager:
             if len(teaches) > 0:
                 teach = random.choice(teaches)
                 return teach.answer
-            elif len(msg) < 50: # nine calculation
+            elif len(msg) < 50 and random.random() < 0.8: # nine calculation
                 max = -1
                 for x in re.findall(r'[0-9]+', msg, re.M):
                     i = int(x)
