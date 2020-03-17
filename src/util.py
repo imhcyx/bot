@@ -37,4 +37,4 @@ class SystemTask(Task):
         self._cmd = cmd
     
     def cmd(self):
-        return self._cmd()
+        return self._cmd

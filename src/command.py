@@ -215,11 +215,12 @@ class SystemAdminCommand(BaseAdminCommand):
             task = SystemTask(
                 uid=uid,
                 gid=gid,
-                callback=lambda s: self._hh.send_msg(uid, gid, "Result:\n%s" % s),
+                callback=lambda s:self._hh.send_msg(
+                    uid, gid, "Command: %s\nResult:\n%s" % (cmd, s)),
                 cmd=cmd
             )
             self._hh.new_task(task)
-            return 'Command: %s' % cmd
+            return False
         else:
             return 'Invalid argument format'
 
