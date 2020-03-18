@@ -296,35 +296,6 @@ class LevelAdminCommand(BaseAdminCommand):
         else:
             return 'Invalid argument format'
 
-class StatusAdminCommand(BaseAdminCommand):
-    def handle(self, arg, user, group):
-        s = 'STATUS'
-        for (k, v) in status.items():
-            s += "\n%s: %s" %(k, repr(v))
-        return s
-
-class SystemAdminCommand(BaseAdminCommand):
-    def __init__(self, hh):
-        self._hh = hh
-    
-    def handle(self, arg, user, group):
-        if len(arg) > 1:
-            uid = user.id
-            gid = group.id if group else None
-            cmd_r = ' '.join(arg[1:])
-            cmd = cqunescape(cmd_r)
-            task = SystemTask(
-                uid=uid,
-                gid=gid,
-                callback=lambda s:self._hh.send_msg(
-                    uid, gid, "Command: %s\nResult:\n%s" % (cmd_r, s)),
-                cmd=cmd
-            )
-            self._hh.new_task(task)
-            return False
-        else:
-            return 'Invalid argument format'
-
 class SendAdminCommand(BaseAdminCommand):
     def __init__(self, hh):
         self._hh = hh
@@ -355,11 +326,42 @@ class SendgroupAdminCommand(BaseAdminCommand):
         except:
             return 'Failed'
 
+class StatusAdminCommand(BaseAdminCommand):
+    def handle(self, arg, user, group):
+        s = 'STATUS'
+        for (k, v) in status.items():
+            s += "\n%s: %s" %(k, repr(v))
+        return s
+
+class SystemAdminCommand(BaseAdminCommand):
+    def __init__(self, hh):
+        self._hh = hh
+    
+    def handle(self, arg, user, group):
+        if len(arg) > 1:
+            uid = user.id
+            gid = group.id if group else None
+            cmd_r = ' '.join(arg[1:])
+            cmd = cqunescape(cmd_r)
+            task = SystemTask(
+                uid=uid,
+                gid=gid,
+                callback=lambda s:self._hh.send_msg(
+                    uid, gid, "Command: %s\nResult:\n%s" % (cmd_r, s)),
+                cmd=cmd
+            )
+            self._hh.new_task(task)
+            return False
+        else:
+            return 'Invalid argument format'
+
 class AdminManager:
     def __init__(self, hh):
         self._commands = {
             '.cirnoadmin.block': BlockAdminCommand(),
             '.cirnoadmin.level': LevelAdminCommand(hh),
+            '.cirnoadmin.send': SendAdminCommand(hh),
+            '.cirnoadmin.sendgroup': SendgroupAdminCommand(hh),
             '.cirnoadmin.status': StatusAdminCommand(),
             '.cirnoadmin.system': SystemAdminCommand(hh),
         }
