@@ -196,6 +196,31 @@ class BlockAdminCommand(BaseAdminCommand):
         else:
             return 'Invalid argument format'
 
+class LevelAdminCommand(BaseAdminCommand):
+    def __init__(self, hh):
+        self._hh = hh
+    
+    def handle(self, arg, user, group):
+        if len(arg) == 2:
+            try:
+                uid = int(arg[1])
+                u = self._hh.get_user_by_id(uid)
+                return 'Level: %d' % u.level
+            except:
+                return 'Failed'
+        elif len(arg) == 3:
+            try:
+                uid = int(arg[1])
+                level = int(arg[2])
+                u = self._hh.get_user_by_id(uid)
+                u.level = level
+                self._hh.dbsess().commit()
+                return 'OK'
+            except:
+                return 'Failed'
+        else:
+            return 'Invalid argument format'
+
 class StatusAdminCommand(BaseAdminCommand):
     def handle(self, arg, user, group):
         s = 'STATUS'
@@ -228,6 +253,7 @@ class AdminManager:
     def __init__(self, hh):
         self._commands = {
             '.cirnoadmin.block': BlockAdminCommand(),
+            '.cirnoadmin.level': LevelAdminCommand(hh),
             '.cirnoadmin.status': StatusAdminCommand(),
             '.cirnoadmin.system': SystemAdminCommand(hh),
         }

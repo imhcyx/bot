@@ -65,32 +65,10 @@ class FilterManager:
             QAFilter(hh),
             NineFilter(hh),
         ]
-    
-    def _get_user_by_id(self, id):
-        sess = self._hh.dbsess()
-        query = sess.query(User).filter_by(id=id)
-        if query.count() == 0:
-            user = User(id=id, level=1)
-            sess.add(user)
-            sess.commit()
-        else:
-            user = query.one()
-        return user
-    
-    def _get_group_by_id(self, id):
-        sess = self._hh.dbsess()
-        query = sess.query(Group).filter_by(id=id)
-        if query.count() == 0:
-            group = Group(id=id)
-            sess.add(group)
-            sess.commit()
-        else:
-            group = query.one()
-        return group
 
     def handle(self, msg, uid, gid):
-        user = self._get_user_by_id(uid) if uid else None
-        group = self._get_group_by_id(gid) if gid else None
+        user = self._hh.get_user_by_id(uid) if uid else None
+        group = self._hh.get_group_by_id(gid) if gid else None
         for filter in self._filters:
             result = filter.filter(msg, user, group)
             if result:

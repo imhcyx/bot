@@ -1,4 +1,5 @@
 from filter import FilterManager
+from model import User, Group
 
 class HandlerHelper:
     def __init__(self, dbsess, send_f, newtask_f):
@@ -57,3 +58,25 @@ class HandlerHelper:
                 'message': resp
             }
         })
+    
+    def get_user_by_id(self, id):
+        sess = self._dbsess
+        query = sess.query(User).filter_by(id=id)
+        if query.count() == 0:
+            user = User(id=id, level=1)
+            sess.add(user)
+            sess.commit()
+        else:
+            user = query.one()
+        return user
+    
+    def get_group_by_id(self, id):
+        sess = self._dbsess
+        query = sess.query(Group).filter_by(id=id)
+        if query.count() == 0:
+            group = Group(id=id)
+            sess.add(group)
+            sess.commit()
+        else:
+            group = query.one()
+        return group
