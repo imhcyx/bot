@@ -56,6 +56,14 @@ class NineFilter(BaseFilter):
                 if nine.count() > 0:
                     return nine.one().answer
 
+class SpecialFilter(BaseFilter):
+    def __init__(self, hh):
+        self._hh = hh
+    
+    def filter(self, msg, user, group):
+        if '琪露诺' in msg:
+            return '嗯？谁在叫本姑娘？'
+
 class FilterManager:
     def __init__(self, hh):
         self._hh = hh
@@ -63,6 +71,7 @@ class FilterManager:
             AdminFilter(hh),
             CommandFilter(hh),
             QAFilter(hh),
+            SpecialFilter(hh),
             NineFilter(hh),
         ]
 

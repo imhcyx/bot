@@ -70,7 +70,7 @@ class GpCommand(BaseCommand):
             uid=uid,
             gid=gid,
             callback=lambda s:self._hh.send_msg(
-                uid, gid, "用户:%s\n表达式: %s\n输出:\n%s" % (user.title(), stmt_r, s)),
+                uid, gid, "用户：%s\n表达式：%s\n输出：\n%s" % (user.title(), stmt_r, s)),
             cmd='chroot --userspec=nobody / gp -q %s' % path
         )
         self._hh.new_task(task)
