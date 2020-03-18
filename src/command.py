@@ -305,7 +305,7 @@ class SendAdminCommand(BaseAdminCommand):
             return 'Invalid argument format'
         try:
             uid = int(arg[1])
-            msg = ' '.join(arg[2:])
+            msg = cqunescape(' '.join(arg[2:]))
             self._hh.send_private_msg(uid, msg)
             return 'OK'
         except:
@@ -320,7 +320,7 @@ class SendgroupAdminCommand(BaseAdminCommand):
             return 'Invalid argument format'
         try:
             gid = int(arg[1])
-            msg = ' '.join(arg[2:])
+            msg = cqunescape(' '.join(arg[2:]))
             self._hh.send_group_msg(gid, msg)
             return 'OK'
         except:
