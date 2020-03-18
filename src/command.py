@@ -325,6 +325,36 @@ class SystemAdminCommand(BaseAdminCommand):
         else:
             return 'Invalid argument format'
 
+class SendAdminCommand(BaseAdminCommand):
+    def __init__(self, hh):
+        self._hh = hh
+    
+    def handle(self, arg, user, group):
+        if len(arg) < 3:
+            return 'Invalid argument format'
+        try:
+            uid = int(arg[1])
+            msg = ' '.join(arg[2:])
+            self._hh.send_private_msg(uid, msg)
+            return 'OK'
+        except:
+            return 'Failed'
+
+class SendgroupAdminCommand(BaseAdminCommand):
+    def __init__(self, hh):
+        self._hh = hh
+    
+    def handle(self, arg, user, group):
+        if len(arg) < 3:
+            return 'Invalid argument format'
+        try:
+            gid = int(arg[1])
+            msg = ' '.join(arg[2:])
+            self._hh.send_group_msg(gid, msg)
+            return 'OK'
+        except:
+            return 'Failed'
+
 class AdminManager:
     def __init__(self, hh):
         self._commands = {
