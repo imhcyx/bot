@@ -296,6 +296,19 @@ class LevelAdminCommand(BaseAdminCommand):
         else:
             return 'Invalid argument format'
 
+class RepeatAdminCommand(BaseAdminCommand):
+    def __init__(self, hh):
+        self._hh = hh
+    
+    def handle(self, arg, user, group):
+        if len(arg) < 2:
+            return 'Invalid argument format'
+        try:
+            msg = ' '.join(arg[1:])
+            return msg
+        except:
+            return 'Failed'
+
 class SendAdminCommand(BaseAdminCommand):
     def __init__(self, hh):
         self._hh = hh
@@ -360,6 +373,7 @@ class AdminManager:
         self._commands = {
             '.cirnoadmin.block': BlockAdminCommand(),
             '.cirnoadmin.level': LevelAdminCommand(hh),
+            '.cirnoadmin.repeat': RepeatAdminCommand(hh),
             '.cirnoadmin.send': SendAdminCommand(hh),
             '.cirnoadmin.sendgroup': SendgroupAdminCommand(hh),
             '.cirnoadmin.status': StatusAdminCommand(),
