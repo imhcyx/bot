@@ -1,6 +1,6 @@
 from model import User, Group, Teach, Nine
 from status import status
-from util import parsecommand
+from util import parsecommand, cqunescape
 from util import SystemTask
 
 class BaseCommand:
@@ -52,7 +52,8 @@ class GpCommand(BaseCommand):
     def handle(self, arg, user, group):
         if len(arg) < 2:
             return "参数个数不正确"
-        stmt = ' '.join(arg[1:])
+        stmt_r = ' '.join(arg[1:])
+        stmt = cqunescape(stmt_r)
         for word in self._blacklist:
             if word in stmt:
                 return '禁止包含%s' % word
@@ -69,7 +70,7 @@ class GpCommand(BaseCommand):
             uid=uid,
             gid=gid,
             callback=lambda s:self._hh.send_msg(
-                uid, gid, "表达式: %s\n输出:\n%s" % (stmt, s)),
+                uid, gid, "用户:%s\n表达式: %s\n输出:\n%s" % (user.title(), stmt_r, s)),
             cmd='chroot --userspec=nobody / gp -q %s' % path
         )
         self._hh.new_task(task)
@@ -310,12 +311,13 @@ class SystemAdminCommand(BaseAdminCommand):
         if len(arg) > 1:
             uid = user.id
             gid = group.id if group else None
-            cmd = ' '.join(arg[1:])
+            cmd_r = ' '.join(arg[1:])
+            cmd = cqunescape(cmd_r)
             task = SystemTask(
                 uid=uid,
                 gid=gid,
                 callback=lambda s:self._hh.send_msg(
-                    uid, gid, "Command: %s\nResult:\n%s" % (cmd, s)),
+                    uid, gid, "Command: %s\nResult:\n%s" % (cmd_r, s)),
                 cmd=cmd
             )
             self._hh.new_task(task)

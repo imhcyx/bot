@@ -16,6 +16,13 @@ def parsecommand(msg):
         arg.append(word)
     return arg
 
+def cqunescape(s):
+    s = s.replace('&amp;', '&')
+    s = s.replace('&#91;', '[')
+    s = s.replace('&#93;', ']')
+    s = s.replace('&#44;', ',')
+    return s
+
 class Task:
     def __init__(self, uid, gid, callback):
         self._uid = uid
