@@ -1,5 +1,7 @@
 FROM python
 
+RUN apt-get update
+RUN apt-get install pari-gp -y
 RUN mkdir /app
 WORKDIR /app
 COPY requirements.txt /app
