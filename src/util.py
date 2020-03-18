@@ -1,4 +1,4 @@
-def parse_command(msg):
+def parsecommand(msg):
     arg = []
     word = ''
     quote = False

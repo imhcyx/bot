@@ -20,7 +20,7 @@ async def task_worker(ws, task_q):
                     task.cmd(),
                     stdout=asyncio.subprocess.PIPE
                 )
-                await asyncio.wait_for(proc.wait(), 15)
+                await asyncio.wait_for(proc.wait(), 30)
                 b = await proc.stdout.read()
                 task.callback(b.decode())
             except asyncio.TimeoutError:

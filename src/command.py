@@ -1,18 +1,28 @@
 from model import User, Group, Teach, Nine
 from status import status
-from util import parse_command
+from util import parsecommand
 from util import SystemTask
 
 class BaseCommand:
+    def __init__(self, format, desc, help, level, parser=parsecommand):
+        self.format = format
+        self.desc = desc
+        self.help = help
+        self.level = level
+        self.parser = parser
+
     def handle(self, arg, user, group):
         return ''
 
 class CallmeCommand(BaseCommand):
     def __init__(self, hh):
-        self.format = '<nickname>'
-        self.desc = '设置称谓'
-        self.help = '设置琪露诺对我的称谓为<nickname>。'
-        self.level = 0
+        BaseCommand.__init__(
+            self,
+            format = '<nickname>',
+            desc = '设置称谓',
+            help = '设置琪露诺对我的称谓为<nickname>。',
+            level = 0
+        )
         self._hh = hh
 
     def handle(self, arg, user, group):
@@ -22,12 +32,59 @@ class CallmeCommand(BaseCommand):
         self._hh.dbsess().commit()
         return "好的，%s！本姑娘以后就这么称呼你啦~" % user.title()
 
+class GpCommand(BaseCommand):
+    def __init__(self, hh):
+        BaseCommand.__init__(
+            self,
+            format = '<stmt> ...',
+            desc = 'PARI/GP计算器',
+            help = '在PARI/GP中执行表达式',
+            level = 1,
+            parser = lambda x: x.split(' ')
+        )
+        self._hh = hh
+        self._blacklist = [
+            'default',
+            'extern',
+            'system',
+        ]
+
+    def handle(self, arg, user, group):
+        if len(arg) < 2:
+            return "参数个数不正确"
+        stmt = ' '.join(arg[1:])
+        for word in self._blacklist:
+            if word in stmt:
+                return '禁止包含%s' % word
+        uid = user.id
+        gid = group.id if group else None
+        path = '/tmp/bot.gp'
+        try:
+            with open(path, 'w') as f:
+                f.write("default(\"secure\", 1)\n")
+                f.write(stmt)
+        except:
+            return '文件操作失败'
+        task = SystemTask(
+            uid=uid,
+            gid=gid,
+            callback=lambda s:self._hh.send_msg(
+                uid, gid, "表达式: %s\n输出:\n%s" % (stmt, s)),
+            cmd='chroot --userspec=nobody / gp -q %s' % path
+        )
+        self._hh.new_task(task)
+        return False
+
+
 class HelpCommand(BaseCommand):
     def __init__(self, cm):
-        self.format = '[<cmd>]'
-        self.desc = '查看帮助'
-        self.help = "查看命令列表或指定命令的帮助。"
-        self.level = 0
+        BaseCommand.__init__(
+            self,
+            format = '[<cmd>]',
+            desc = '查看帮助',
+            help = "查看命令列表或指定命令的帮助。",
+            level = 0
+        )
         self._cm = cm
 
     def handle(self, arg, user, group):
@@ -51,20 +108,26 @@ class HelpCommand(BaseCommand):
 
 class MeCommand(BaseCommand):
     def __init__(self):
-        self.format = ''
-        self.desc = '我的信息'
-        self.help = '查看我的信息'
-        self.level = 0
+        BaseCommand.__init__(
+            self,
+            format = '',
+            desc = '我的信息',
+            help = '查看我的信息',
+            level = 0
+        )
 
     def handle(self, arg, user, group):
         return "你好，%s！\n你的权限等级为%d。" % (user.title(), user.level)
 
 class TeachCommand(BaseCommand):
     def __init__(self, hh):
-        self.format = '<question> <answer>'
-        self.desc = '问答教学'
-        self.help = "教琪露诺回答问题吧！当提问内容为<question>时，琪露诺会回答<answer>。"
-        self.level = 1
+        BaseCommand.__init__(
+            self,
+            format = '<question> <answer>',
+            desc = '问答教学',
+            help = "教琪露诺回答问题吧！当提问内容为<question>时，琪露诺会回答<answer>。",
+            level = 1
+        )
         self._hh = hh
 
     def handle(self, arg, user, group):
@@ -77,10 +140,13 @@ class TeachCommand(BaseCommand):
 
 class TeachDeleteCommand(BaseCommand):
     def __init__(self, hh):
-        self.format = '<id>'
-        self.desc = '删除问答'
-        self.help = "根据给定的问答编号<id>删除问答内容。"
-        self.level = 4
+        BaseCommand.__init__(
+            self,
+            format = '<id>',
+            desc = '删除问答',
+            help = "根据给定的问答编号<id>删除问答内容。",
+            level = 4
+        )
         self._hh = hh
 
     def handle(self, arg, user, group):
@@ -97,10 +163,13 @@ class TeachDeleteCommand(BaseCommand):
 
 class TeachQueryCommand(BaseCommand):
     def __init__(self, hh):
-        self.format = '<id>'
-        self.desc = '查询问答'
-        self.help = "根据给定的问答编号<id>查询问答内容。"
-        self.level = 4
+        BaseCommand.__init__(
+            self,
+            format = '<id>',
+            desc = '查询问答',
+            help = "根据给定的问答编号<id>查询问答内容。",
+            level = 4
+        )
         self._hh = hh
 
     def handle(self, arg, user, group):
@@ -116,10 +185,13 @@ class TeachQueryCommand(BaseCommand):
 
 class TeachSearchCommand(BaseCommand):
     def __init__(self, hh):
-        self.format = '<keyword>'
-        self.desc = '搜索问答内容'
-        self.help = "根据给定的关键字<keyword>查询问答内容。"
-        self.level = 4
+        BaseCommand.__init__(
+            self,
+            format = '<keyword>',
+            desc = '搜索问答内容',
+            help = "根据给定的关键字<keyword>查询问答内容。",
+            level = 4
+        )
         self._hh = hh
 
     def handle(self, arg, user, group):
@@ -146,6 +218,7 @@ class CommandManager:
     def __init__(self, hh):
         self._commands = {
             '.cirno.callme': CallmeCommand(hh),
+            '.cirno.gp': GpCommand(hh),
             '.cirno.help': HelpCommand(self),
             '.cirno.me': MeCommand(),
             '.cirno.teach': TeachCommand(hh),
@@ -166,17 +239,18 @@ class CommandManager:
             yield(k, v)
 
     def handle(self, msg, user, group):
-        arg = parse_command(msg)
-        if arg[0] == '.cirno':
+        cmdname = msg.split(' ')[0]
+        if cmdname == '.cirno':
             return "我是天才少女琪露诺！输入.cirno.help查看帮助信息"
-        cmd = self._commands.get(arg[0])
+        cmd = self._commands.get(cmdname)
         if cmd:
             if user.level >= cmd.level:
+                arg = cmd.parser(msg)
                 return cmd.handle(arg, user, group)
             else:
                 return "你没有使用该命令的权限。"
         else:
-            return "未知命令%s" % arg[0]
+            return "未知命令%s" % cmdname
 
 class BaseAdminCommand:
     def handle(self, arg, user, group):
