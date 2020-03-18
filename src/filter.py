@@ -61,7 +61,7 @@ class SpecialFilter(BaseFilter):
         self._hh = hh
     
     def filter(self, msg, user, group):
-        if '琪露诺' in msg:
+        if '琪露诺' in msg and random.random() < 0.5:
             return '嗯？谁在叫本姑娘？'
 
 class FilterManager:
