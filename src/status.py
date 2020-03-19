@@ -1,3 +1,4 @@
 status = {
-    'block': False
+    'block': False,
+    'recentusers': [],
 }

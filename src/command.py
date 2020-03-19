@@ -309,6 +309,11 @@ class RepeatAdminCommand(BaseAdminCommand):
         except:
             return 'Failed'
 
+class ResetblkAdminCommand(BaseAdminCommand):
+    def handle(self, arg, user, group):
+        status['recentusers'] = []
+        return 'OK'
+
 class SendAdminCommand(BaseAdminCommand):
     def __init__(self, hh):
         self._hh = hh
@@ -407,6 +412,7 @@ class AdminManager:
             '!block': BlockAdminCommand(),
             '!level': LevelAdminCommand(hh),
             '!repeat': RepeatAdminCommand(hh),
+            '!resetblk': ResetblkAdminCommand(),
             '!send': SendAdminCommand(hh),
             '!sendgroup': SendgroupAdminCommand(hh),
             '!sql': SqlAdminCommand(hh),

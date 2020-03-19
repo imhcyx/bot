@@ -21,6 +21,17 @@ class AdminFilter(BaseFilter):
         elif status['block']:
             return False # block all subsequent filters
 
+class AutoblockFilter(BaseFilter):
+    def filter(self, msg, user, group):
+        uid = user.id
+        recent = status['recentusers']
+        count = recent.count(uid)
+        if count >= 10:
+            return False
+        if count >= 5 and random.random() < 0.5:
+            return False
+        status['recentusers'] = [uid] + recent[:28]
+
 class CommandFilter(BaseFilter):
     def __init__(self, hh):
         self._hh = hh
@@ -91,6 +102,7 @@ class FilterManager:
         self._filters = [
             AdminFilter(hh),
             CommandFilter(hh),
+            AutoblockFilter(),
             QAFilter(hh),
             SpecialFilter(hh),
             NineFilter(hh),
