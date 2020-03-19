@@ -30,7 +30,7 @@ class AutoblockFilter(BaseFilter):
             return False
         if count >= 5 and random.random() < 0.5:
             return False
-        status['recentusers'] = [uid] + recent[:28]
+        status['recentusers'] = [uid] + recent[:19]
 
 class CommandFilter(BaseFilter):
     def __init__(self, hh):
