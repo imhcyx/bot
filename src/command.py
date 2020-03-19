@@ -339,6 +339,36 @@ class SendgroupAdminCommand(BaseAdminCommand):
         except:
             return 'Failed'
 
+class SqlAdminCommand(BaseAdminCommand):
+    def __init__(self, hh):
+        self._hh = hh
+    
+    def handle(self, arg, user, group):
+        if len(arg) > 1:
+            sess = self._hh.dbsess()
+            sql = cqunescape(' '.join(arg[1:]))
+            resp = "Execute: %s\n----------" % sql
+            result = sess.execute(sql)
+            if result.returns_rows:
+                resp += "\nQuery up to 10 rows"
+                keys = result.keys()
+                resp += "\n"
+                for k in keys:
+                    resp += "|%s" % k
+                resp += "|"
+                for row in result.fetchmany(10):
+                    resp += "\n"
+                    for k in keys:
+                        resp += "|%s" % row[k]
+                    resp += "|"
+            else:
+                resp += "\n%d rows affected" % result.rowcount
+            result.close()
+            sess.commit()
+            return resp
+        else:
+            return 'Invalid argument format'
+
 class StatusAdminCommand(BaseAdminCommand):
     def handle(self, arg, user, group):
         s = 'STATUS'
@@ -371,13 +401,14 @@ class SystemAdminCommand(BaseAdminCommand):
 class AdminManager:
     def __init__(self, hh):
         self._commands = {
-            '.cirnoadmin.block': BlockAdminCommand(),
-            '.cirnoadmin.level': LevelAdminCommand(hh),
-            '.cirnoadmin.repeat': RepeatAdminCommand(hh),
-            '.cirnoadmin.send': SendAdminCommand(hh),
-            '.cirnoadmin.sendgroup': SendgroupAdminCommand(hh),
-            '.cirnoadmin.status': StatusAdminCommand(),
-            '.cirnoadmin.system': SystemAdminCommand(hh),
+            '!block': BlockAdminCommand(),
+            '!level': LevelAdminCommand(hh),
+            '!repeat': RepeatAdminCommand(hh),
+            '!send': SendAdminCommand(hh),
+            '!sendgroup': SendgroupAdminCommand(hh),
+            '!sql': SqlAdminCommand(hh),
+            '!status': StatusAdminCommand(),
+            '!system': SystemAdminCommand(hh),
         }
         self._hh = hh
     

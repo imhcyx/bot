@@ -16,7 +16,7 @@ class AdminFilter(BaseFilter):
         self._am = AdminManager(hh)
     
     def filter(self, msg, user, group):
-        if msg.startswith('.cirnoadmin') and user.id == cfg['admin_id']:
+        if msg.startswith('!') and user.id == cfg['admin_id']:
             return self._am.handle(msg, user, group)
         elif status['block']:
             return False # block all subsequent filters
