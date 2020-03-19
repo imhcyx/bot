@@ -52,9 +52,30 @@ class NineFilter(BaseFilter):
                 if i > max:
                     max = i
             if max > 9 or random.random() < 0.6: # trigger with probability for 0-9
-                nine = self._hh.dbsess().query(Nine).filter_by(number=max)
-                if nine.count() > 0:
-                    return nine.one().answer
+                ans = self.find_answer(max)
+                if ans:
+                    return '%d = %s' % (max, ans)
+    
+    def find_answer(self, num):
+        sess = self._hh.dbsess()
+        # 1. direct answer
+        query = sess.query(Nine).filter_by(number=num)
+        if query.count() > 0:
+            return query.one().answer
+        # 2. sum of known answers
+        if num < 10000000000:
+            all = []
+            cur = num
+            while cur > 0:
+                query = sess.query(Nine).filter(Nine.number<=cur).order_by(Nine.number.desc()).limit(1)
+                if query.count() > 0:
+                    a = query.one()
+                    all.append(a.answer)
+                    cur -= a.number
+                else:
+                    break
+            if cur == 0:
+                return '+'.join(all)
 
 class SpecialFilter(BaseFilter):
     def __init__(self, hh):
