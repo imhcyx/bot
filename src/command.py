@@ -347,25 +347,28 @@ class SqlAdminCommand(BaseAdminCommand):
         if len(arg) > 1:
             sess = self._hh.dbsess()
             sql = cqunescape(' '.join(arg[1:]))
-            resp = "Execute: %s\n----------" % sql
-            result = sess.execute(sql)
-            if result.returns_rows:
-                resp += "\nQuery up to 10 rows"
-                keys = result.keys()
-                resp += "\n"
-                for k in keys:
-                    resp += "|%s" % k
-                resp += "|"
-                for row in result.fetchmany(10):
+            try:
+                resp = "Execute: %s\n----------" % sql
+                result = sess.execute(sql)
+                if result.returns_rows:
+                    resp += "\nQuery up to 10 rows"
+                    keys = result.keys()
                     resp += "\n"
                     for k in keys:
-                        resp += "|%s" % row[k]
+                        resp += "|%s" % k
                     resp += "|"
-            else:
-                resp += "\n%d rows affected" % result.rowcount
-            result.close()
-            sess.commit()
-            return resp
+                    for row in result.fetchmany(10):
+                        resp += "\n"
+                        for k in keys:
+                            resp += "|%s" % row[k]
+                        resp += "|"
+                else:
+                    resp += "\n%d rows affected" % result.rowcount
+                result.close()
+                sess.commit()
+                return resp
+            except:
+                return 'Failed'
         else:
             return 'Invalid argument format'
 
@@ -414,8 +417,6 @@ class AdminManager:
     
     def handle(self, msg, user, group):
         arg = msg.split(' ')
-        if arg[0] == '.cirnoadmin':
-            return 'Access confirmed'
         cmd = self._commands.get(arg[0])
         if cmd:
             return cmd.handle(arg, user, group)
