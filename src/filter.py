@@ -26,9 +26,9 @@ class AutoblockFilter(BaseFilter):
         uid = user.id
         recent = status['recentusers']
         count = recent.count(uid)
-        if count >= 10:
+        if count >= 10 and random.random() < 0.5:
             return False
-        if count >= 5 and random.random() < 0.5:
+        if count >= 5 and random.random() < 0.8:
             return False
         status['recentusers'] = [uid] + recent[:19]
 
