@@ -102,7 +102,7 @@ class FilterManager:
         self._filters = [
             AdminFilter(hh),
             CommandFilter(hh),
-            AutoblockFilter(),
+            #AutoblockFilter(),
             QAFilter(hh),
             SpecialFilter(hh),
             NineFilter(hh),
