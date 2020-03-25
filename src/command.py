@@ -89,12 +89,12 @@ class HelpCommand(BaseCommand):
             s = "命令列表：\n"
             for (k, v) in self._cm.command_iter():
                 s += "%s %s\n" % (k, v.desc)
-            s += "\n使用.cirno.help <cmd>查看命令具体帮助，<cmd>可省略\"cirno.\"。"
+            s += "\n使用cirno.help <cmd>查看命令具体帮助，<cmd>可省略\"cirno.\"。"
             return s
         elif len(arg) == 2:
             s = arg[1]
-            if not s.startswith('.cirno'):
-                s = '.cirno.' + s
+            if not s.startswith('cirno'):
+                s = 'cirno.' + s
             cmd = self._cm.command(s)
             if cmd:
                 return "%s %s\n权限要求：%d\n%s" % (s, cmd.format, cmd.level, cmd.help)
