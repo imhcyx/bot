@@ -81,10 +81,11 @@ class NineFilter(BaseFilter):
             i = int(x)
             if i > max:
                 max = i
-        ans = self.find_answer(max, msg.cirno.sess)
-        if ans:
-            msg.reply('%d = %s' % (max, ans))
-            return True
+        if max >= 0:
+            ans = self.find_answer(max, msg.cirno.sess)
+            if ans:
+                msg.reply('%d = %s' % (max, ans))
+                return True
     
     def find_answer(self, num, sess):
         # 1. direct answer
