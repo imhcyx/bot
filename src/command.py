@@ -163,7 +163,7 @@ class TeachQueryCommand(BaseCommand):
             format = '<id>',
             desc = '查询问答',
             help = "根据给定的问答编号<id>查询问答内容。",
-            level = 4
+            level = 1
         )
 
     def handle(self, msg, arg):
@@ -184,7 +184,7 @@ class TeachSearchCommand(BaseCommand):
             format = '<keyword>',
             desc = '搜索问答内容',
             help = "根据给定的关键字<keyword>查询问答内容。",
-            level = 4
+            level = 1
         )
 
     def handle(self, msg, arg):
