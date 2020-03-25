@@ -233,7 +233,7 @@ class CommandManager:
     def handle(self, msg):
         cmdname = msg.text.split(' ')[0]
         if cmdname == 'cirno':
-            return "我是天才少女琪露诺！输入.cirno.help查看帮助信息"
+            return "我是天才少女琪露诺！输入cirno.help查看帮助信息"
         cmd = self._commands.get(cmdname)
         if cmd:
             if msg.user.level >= cmd.level:
