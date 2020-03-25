@@ -9,8 +9,9 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(50))
-    level = Column(Integer)
+    level = Column(Integer, default=1)
 
+    @property
     def title(self):
         if self.name:
             return self.name

@@ -1,22 +1,26 @@
-from handler import HandlerHelper
+from cirno import Cirno
 from db import Session
 
-session = Session()
-hh = HandlerHelper(
-    session,
-    lambda x: print('task added'),
-    lambda x: print('response sent')
-)
-fm = hh.fm()
+class CirnoTest(Cirno):
+    def send_resp(self, resp):
+        print(resp.text)
+
+cirno = CirnoTest()
 uid = 123456
 gid = 0
 
 while True:
-    msg = input('%d @ %d> ' % (uid, gid))
-    if msg.startswith('#uid '):
-        uid = int(msg.split(' ')[1])
-    elif msg.startswith('#gid '):
-        gid = int(msg.split(' ')[1])
+    text = input('%d @ %d> ' % (uid, gid))
+    if text.startswith('#uid '):
+        uid = int(text.split(' ')[1])
+    elif text.startswith('#gid '):
+        gid = int(text.split(' ')[1])
     else:
-        resp = fm.handle(msg, uid, gid)
-        print(resp)
+        event = {
+            'post_type': 'message',
+            'message_type': 'group' if gid else 'private',
+            'user_id': uid,
+            'group_id': gid,
+            'message': text,
+        }
+        cirno.handle_event(event)
