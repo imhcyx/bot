@@ -67,7 +67,7 @@ class GpCommand(BaseCommand):
             uid=uid,
             gid=gid,
             callback=lambda s:msg.cirno.send_msg(
-                "用户：%s\n表达式：%s\n输出：\n%s" % (msg.user.title, stmt_r, s), uid, gid),
+                "来自%s的表达式：%s\n输出：\n%s" % (msg.user.title, stmt_r, s), uid, gid),
             cmd='chroot --userspec=nobody / gp -q %s' % path
         )
         msg.cirno.add_task(task)

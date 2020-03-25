@@ -1,5 +1,6 @@
 import random
 import re
+import time
 
 from command import CommandManager, AdminManager
 from model import User, Group, Teach, Nine
@@ -16,6 +17,30 @@ class FilterList(BaseFilter):
     def handle(self, msg):
         for filter in self.__subfilters:
             if filter.handle(msg):
+                break
+
+class AccessLimitFilter(BaseFilter):
+    def __init__(self, subfilters=[]):
+        self.__subfilters = subfilters
+    
+    def handle(self, msg):
+        if msg.user.runtime.access_cooldown:
+            if not msg.user.runtime.access_cooldown_prompted:
+                msg.user.runtime.access_cooldown_prompted = True
+                msg.reply('%s，你说话太快了，请稍后再试。' % msg.user.title)
+            return True
+        for filter in self.__subfilters:
+            if filter.handle(msg):
+                ts = msg.user.runtime.timestamps
+                ts = [time.time()] + ts[:9]
+                msg.user.runtime.timestamps = ts
+                # 10 accesses in 10 seconds
+                if len(ts) == 10 and (ts[9] - ts[0]) < 10:
+                    msg.user.runtime.access_cooldown = True
+                    msg.user.runtime.access_cooldown_prompted = False
+                    def func():
+                        msg.user.runtime.access_cooldown = False
+                    msg.cirno.set_timeout(30, func)
                 break
 
 class AdminFilter(BaseFilter):
@@ -89,8 +114,10 @@ class SpecialFilter(BaseFilter):
 
 default_filters = FilterList([
     AdminFilter(),
-    CommandFilter(),
-    QAFilter(),
-    SpecialFilter(),
-    NineFilter(),
+    AccessLimitFilter([
+        CommandFilter(),
+        QAFilter(),
+        SpecialFilter(),
+        NineFilter(),
+    ]),
 ])

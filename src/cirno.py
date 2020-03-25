@@ -7,6 +7,7 @@ from model import User, Group
 from db import Session
 from filter import default_filters
 from message import Message, Response
+from runtime import UserData
 
 async def _recv_worker(ws, cirno):
     while True:
@@ -18,10 +19,12 @@ async def _send_worker(ws, send_q):
         await asyncio.sleep(resp.delay)
         await ws.send(json.dumps(resp.to_json()))
 
-async def _task_worker(task_q):
-    while True:
-        task = await task_q.get()
-        await task.handle()
+async def _task_worker(task):
+    await task.handle()
+
+async def _timeout_worker(timeout, func):
+    await asyncio.sleep(timeout)
+    func()
 
 class Cirno:
     def __init__(self):
@@ -29,17 +32,16 @@ class Cirno:
         self.__sess = Session()
         self.__filters = default_filters
         self.__send_q = None
+        self.__runtime_users = {}
     
     async def run(self):
         async with websockets.connect(cfg['ws'], ping_interval=None) as ws:
             print('connection established')
             self.__send_q = asyncio.Queue()
-            self.__task_q = asyncio.Queue()
             coroutines = [
                 _recv_worker(ws, cirno),
                 _send_worker(ws, self.__send_q),
             ]
-            coroutines += [_task_worker(self.__task_q) for i in range(3)]
             tasks = [asyncio.create_task(c) for c in coroutines]
             self.__running = True
             for task in tasks:
@@ -65,8 +67,10 @@ class Cirno:
         self.send_resp(resp)
     
     def add_task(self, task):
-        if self.__running:
-            self.__task_q.put_nowait(task)
+        asyncio.create_task(_task_worker(task))
+    
+    def set_timeout(self, timeout, func):
+        asyncio.create_task(_timeout_worker(timeout, func))
     
     @property
     def sess(self):
@@ -81,6 +85,11 @@ class Cirno:
             sess.commit()
         else:
             user = query.one()
+        if id in self.__runtime_users:
+            user.runtime = self.__runtime_users[id]
+        else:
+            user.runtime = UserData()
+            self.__runtime_users[id] = user.runtime
         return user
     
     def group_from_id(self, id):
