@@ -38,8 +38,8 @@ class Cirno:
             coroutines = [
                 _recv_worker(ws, cirno),
                 _send_worker(ws, self.__send_q),
-                _task_worker(self.__task_q)
             ]
+            coroutines += [_task_worker(self.__task_q) for i in range(3)]
             tasks = [asyncio.create_task(c) for c in coroutines]
             self.__running = True
             for task in tasks:
