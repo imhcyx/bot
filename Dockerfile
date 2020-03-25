@@ -11,4 +11,4 @@ COPY 9.txt /app
 COPY defconfig.json /app
 #RUN python /app/db.py
 
-CMD ["python","/app/main.py"]
+CMD ["python","/app/cirno.py"]
