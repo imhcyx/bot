@@ -59,7 +59,7 @@ class CommandFilter(BaseFilter):
         self.__cm = CommandManager()
     
     def handle(self, msg):
-        if msg.text.startswith('.cirno'): 
+        if msg.text.startswith('cirno'): 
             result = self.__cm.handle(msg)
             if result or result == '':
                 msg.reply(result)

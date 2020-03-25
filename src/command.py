@@ -210,14 +210,14 @@ class TeachSearchCommand(BaseCommand):
 class CommandManager:
     def __init__(self):
         self._commands = {
-            '.cirno.callme': CallmeCommand(),
-            '.cirno.gp': GpCommand(),
-            '.cirno.help': HelpCommand(self),
-            '.cirno.me': MeCommand(),
-            '.cirno.teach': TeachCommand(),
-            '.cirno.teach.delete': TeachDeleteCommand(),
-            '.cirno.teach.query': TeachQueryCommand(),
-            '.cirno.teach.search': TeachSearchCommand(),
+            'cirno.callme': CallmeCommand(),
+            'cirno.gp': GpCommand(),
+            'cirno.help': HelpCommand(self),
+            'cirno.me': MeCommand(),
+            'cirno.teach': TeachCommand(),
+            'cirno.teach.delete': TeachDeleteCommand(),
+            'cirno.teach.query': TeachQueryCommand(),
+            'cirno.teach.search': TeachSearchCommand(),
         }
 
     def register_command(self, name, cmd):
@@ -232,7 +232,7 @@ class CommandManager:
 
     def handle(self, msg):
         cmdname = msg.text.split(' ')[0]
-        if cmdname == '.cirno':
+        if cmdname == 'cirno':
             return "我是天才少女琪露诺！输入.cirno.help查看帮助信息"
         cmd = self._commands.get(cmdname)
         if cmd:
