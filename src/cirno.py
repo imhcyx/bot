@@ -33,6 +33,7 @@ class Cirno:
         self.__filters = default_filters
         self.__send_q = None
         self.__runtime_users = {}
+        self.__tasks = []
     
     async def run(self):
         async with websockets.connect(cfg['ws'], ping_interval=None) as ws:
@@ -42,10 +43,13 @@ class Cirno:
                 _recv_worker(ws, cirno),
                 _send_worker(ws, self.__send_q),
             ]
-            tasks = [asyncio.create_task(c) for c in coroutines]
+            self.__tasks = [asyncio.create_task(c) for c in coroutines]
             self.__running = True
-            for task in tasks:
-                await task
+            try:
+                for task in self.__tasks:
+                    await task
+            except asyncio.CancelledError:
+                pass
 
     def handle_event(self, event):
         post_type = event.get('post_type')
@@ -71,6 +75,10 @@ class Cirno:
     
     def set_timeout(self, timeout, func):
         asyncio.create_task(_timeout_worker(timeout, func))
+    
+    def abort(self):
+        for task in self.__tasks:
+            task.cancel()
     
     @property
     def sess(self):

@@ -89,7 +89,7 @@ class HelpCommand(BaseCommand):
             s = "命令列表：\n"
             for (k, v) in self._cm.command_iter():
                 s += "%s %s\n" % (k, v.desc)
-            s += "\n使用.cirno.help <cmd>查看命令具体帮助，<cmd>可省略\".cirno.\"。"
+            s += "\n使用.cirno.help <cmd>查看命令具体帮助，<cmd>可省略\"cirno.\"。"
             return s
         elif len(arg) == 2:
             s = arg[1]
@@ -280,6 +280,13 @@ class RepeatAdminCommand(BaseAdminCommand):
         except:
             return 'Failed'
 
+class RestartAdminCommand(BaseAdminCommand):
+    def handle(self, msg, arg):
+        def func():
+            msg.cirno.abort()
+        msg.cirno.set_timeout(5, func)
+        return 'Restarting in 5 seconds ...'
+
 class SendAdminCommand(BaseAdminCommand):
     def handle(self, msg, arg):
         if len(arg) < 3:
@@ -358,6 +365,7 @@ class AdminManager:
         self._commands = {
             '!level': LevelAdminCommand(),
             '!repeat': RepeatAdminCommand(),
+            '!restart': RestartAdminCommand(),
             '!send': SendAdminCommand(),
             '!sendgroup': SendgroupAdminCommand(),
             '!sql': SqlAdminCommand(),
