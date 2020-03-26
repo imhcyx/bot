@@ -10,7 +10,7 @@ class Message:
         self.__user = cirno.user_from_id(uid) if uid else None
         self.__group = cirno.group_from_id(gid) if gid else None
     
-    def reply(self, text, delay=1):
+    def reply(self, text, delay=0):
         self.__cirno.send_resp(Response(
             text=text,
             uid=self.__uid,

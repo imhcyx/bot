@@ -17,7 +17,7 @@ class FilterList(BaseFilter):
     def handle(self, msg):
         for filter in self.__subfilters:
             if filter.handle(msg):
-                break
+                return True
 
 class AccessLimitFilter(BaseFilter):
     def __init__(self, subfilters=[]):
@@ -25,9 +25,6 @@ class AccessLimitFilter(BaseFilter):
     
     def handle(self, msg):
         if msg.user.runtime.access_cooldown:
-            if not msg.user.runtime.access_cooldown_prompted:
-                msg.user.runtime.access_cooldown_prompted = True
-                msg.reply('%s，你说话太快了，请稍后再试。' % msg.user.title)
             return True
         for filter in self.__subfilters:
             if filter.handle(msg):
@@ -35,13 +32,14 @@ class AccessLimitFilter(BaseFilter):
                 ts = [time.time()] + ts[:9]
                 msg.user.runtime.timestamps = ts
                 # 10 accesses in 10 seconds
-                if len(ts) == 10 and (ts[9] - ts[0]) < 10:
+                if len(ts) == 10 and (ts[0] - ts[9]) < 10:
+                    msg.reply('%s，你的操作太快了，休息一下吧。' % msg.user.title)
                     msg.user.runtime.access_cooldown = True
                     msg.user.runtime.access_cooldown_prompted = False
                     def func():
                         msg.user.runtime.access_cooldown = False
                     msg.cirno.set_timeout(30, func)
-                break
+                return True
 
 class AdminFilter(BaseFilter):
     def __init__(self):
